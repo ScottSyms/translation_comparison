@@ -44,8 +44,8 @@ french=urllib.request.urlopen("https://www.canada.ca/fr/ministere-defense-nation
 
 
 # extract the data from the pages and remove line breaks
-english=BeautifulSoup(english, features="lxml").get_text().replace("\n", " ")
-french=BeautifulSoup(french, features="lxml").get_text().replace("\n", " ")
+english=BeautifulSoup(english, features="lxml").get_text() # .replace("\n", " ")
+french=BeautifulSoup(french, features="lxml").get_text() # .replace("\n", " ")
 
 
 # Translate the French page into English
@@ -144,28 +144,30 @@ print("How many words shared between English translations.", len(english_compari
 print("How many words shared between the French translations", len(french_comparison))
 print("Simularity English", len(english_comparison)*2/(len(keywords_original_english)+len(keywords_translated_from_french)))
 print("Simularity French", len(french_comparison)*2/(len(keywords_original_french)+len(keywords_translated_from_english)))
+print("Vector Similarity English", original_french.similarity(french_from_english))
+print("Vector Similarity French", original_english.similarity(english_from_french))
 
 # Open a file and save some diagnostic data
-f=open("summary_trans.txt", "w")
+f=open("fourth_summary.txt", "w")
 f.write(english + "\n\n\n")
 f.write(translated_from_french + "\n\n\n")
 f.write(french + "\n\n\n")
 
 
 # Write the sorted word lists
-f.write("Original English")
+f.write("Original English\n")
 for i,j in sorted(keywords_original_english.items()) :
     f.write(i+"\n")
 
-f.write("\n\n\n\nTranslated English")
+f.write("\n\n\n\nTranslated English\n")
 for i,j in sorted(keywords_translated_from_french.items()):
     f.write(i+"\n")
 
-f.write("\n\n\n\Original French")
+f.write("\n\n\n\Original French\n")
 for i,j in sorted(keywords_original_french.items()):
     f.write(i+"\n")
 
-f.write("\n\n\n\Translated French")
+f.write("\n\n\n\Translated French\n")
 for i,j in sorted(keywords_translated_from_english.items()):
     f.write(i+"\n")
 f.close()   
