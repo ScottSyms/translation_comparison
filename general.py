@@ -1,6 +1,6 @@
-from cgitb import text
-from gettext import translation
-from webbrowser import get
+# from cgitb import text
+# from gettext import translation
+# from webbrowser import get
 import requests
 import re
 import sys
@@ -18,7 +18,7 @@ import es_core_news_lg
 
 
 class compareTranslations():
-    def __init__(self, url1, language1, url2, language2):
+    def __init__(self):
         # Set up the Microsoft Translation boiler plate
         # Taken from Translation services example
         # **************************************************
@@ -51,10 +51,6 @@ class compareTranslations():
         self.nlpen = spacy.load("en_core_web_lg")  # English
         self.nlpfr = fr_core_news_lg.load()  # French
         self.nlpes = es_core_news_lg.load()  # Spanish
-        self.url1 = url1
-        self.language1 = language1
-        self.url2 = url2
-        self.language2 = language2
 
         # Initialize the translation dictionary
         self.translations = {}
@@ -74,6 +70,12 @@ class compareTranslations():
         
         self.translations[0] = template
         self.translations[1] = template
+
+    def loadpages(self, url1, language1, url2, language2):
+        self.url1 = url1
+        self.language1 = language1
+        self.url2 = url2
+        self.language2 = language2
 
         self.translations[0] = {"url": self.url1, "text": self.get_webpage_text(
             self.url1), "language": self.language1}
