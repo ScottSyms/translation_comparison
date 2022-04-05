@@ -277,9 +277,10 @@ class Compare():
 if __name__ == '__main__':
     f = Compare()
 
-    testitems = [["https://en.wikipedia.org/wiki/Volodymyr_Zelenskyy", "en", "https://fr.wikipedia.org/wiki/Volodymyr_Zelenskyy", "fr"],
-                 ["https://en.wikipedia.org/wiki/Julius_Caesar", "en",
-                     "https://fr.wikipedia.org/wiki/Jules_C%C3%A9sar", "fr"],
+    testitems = [
+        # ["https://en.wikipedia.org/wiki/Volodymyr_Zelenskyy", "en", "https://fr.wikipedia.org/wiki/Volodymyr_Zelenskyy", "fr"],
+                #  ["https://en.wikipedia.org/wiki/Julius_Caesar", "en",
+                #      "https://fr.wikipedia.org/wiki/Jules_C%C3%A9sar", "fr"],
                  ["https://en.wikipedia.org/wiki/Luge", "en",
                      "https://fr.wikipedia.org/wiki/Luge_de_course", "fr"],
                  ["https://en.wikipedia.org/wiki/Charles_de_Gaulle", "en",

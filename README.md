@@ -22,26 +22,38 @@ RESULTS
 
 Compare French and Engish wikipedia pages
 
-For an unknown language pair https://en.wikipedia.org/wiki/Volodymyr_Zelenskyy and https://fr.wikipedia.org/wiki/Volodymyr_Zelenskyy the similarity scores are..
-Cross translation cosine simularity score 0.8465454251707962
-Third language  cosine simularity score 0.8049446044663335
+The similarity scores between https://en.wikipedia.org/wiki/Volodymyr_Zelenskyy and https://fr.wikipedia.org/wiki/Volodymyr_Zelenskyy are...
+Cross translation cosine similarity score 0.8447698618403967
+Third language  cosine similarity score 0.8035030124314274
+Raw language BERT cosine similarity score 0.49295646
+Cross translation language BERT cosine similarity score 0.5602318048477173
+Third language BERT cosine similarity score 0.5461247
 
-For an unknown language pair https://en.wikipedia.org/wiki/Julius_Caesar and https://fr.wikipedia.org/wiki/Jules_C%C3%A9sar the similarity scores are...
+The similarity scores between https://en.wikipedia.org/wiki/Julius_Caesar and https://fr.wikipedia.org/wiki/Jules_C%C3%A9sar are...
 Cross translation cosine similarity score 0.9862126663559044
-Third language  cosine similarity score 0.9851069958143371
+Third language  cosine similarity score 0.9851200136003984
+Raw language BERT cosine similarity score 0.505359
+Cross translation language BERT cosine similarity score 0.6329710483551025
+Third language BERT cosine similarity score 0.6914114
 
-For an unknown language pair https://en.wikipedia.org/wiki/Luge and https://fr.wikipedia.org/wiki/Luge_de_course the similarity scores are...
-Cross translation cosine similarity score 0.9524338067111711
-Third language  cosine similarity score 0.9568057253944731
+The similarity scores between https://en.wikipedia.org/wiki/Luge and https://fr.wikipedia.org/wiki/Luge_de_course are...
+Cross translation cosine similarity score 0.9524500203203897
+Third language  cosine similarity score 0.9567756281212567
+Raw language BERT cosine similarity score 0.5010763
+Cross translation language BERT cosine similarity score 0.475641131401062
+Third language BERT cosine similarity score 0.43394098
 
 The similarity scores between https://en.wikipedia.org/wiki/Charles_de_Gaulle and https://fr.wikipedia.org/wiki/Charles_de_Gaulle are...
-Cross translation cosine similarity score 0.9720285201437084
-Third language  cosine similarity score 0.9817729334831262
-
-The similarity scores between https://en.wikipedia.org/wiki/Charles_de_Gaulle and https://fr.wikipedia.org/wiki/Volodymyr_Zelenskyy are...
-Cross translation cosine similarity score 0.8374814823757809
-Third language  cosine similarity score 0.7720316873804012
+Cross translation cosine similarity score 0.9720288881264448
+Third language  cosine similarity score 0.9817530406510517
+Raw language BERT cosine similarity score 0.60305756
+Cross translation language BERT cosine similarity score 0.6425055265426636
+Third language BERT cosine similarity score 0.61636186
 
 The similarity scores between https://en.wikipedia.org/wiki/Charles_de_Gaulle and https://fr.wikipedia.org/wiki/Luge_de_course are...
 Cross translation cosine similarity score 0.894891527608239
-Third language  cosine similarity score 0.9013083156340581
+Third language  cosine similarity score 0.9013119327737523
+Raw language BERT cosine similarity score 0.32892394
+Cross translation language BERT cosine similarity score 0.3530624508857727
+Ignored unknown kwarg option direction
+Third language BERT cosine similarity score 0.30099398
