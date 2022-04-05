@@ -12,6 +12,16 @@ from bs4 import BeautifulSoup
 import fr_core_news_lg
 import es_core_news_lg
 
+# Bert comparisons
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
+
+
+# ****************************************************************
+# TODO
+# Format numbers in the comparisons, ie/ fixed digits after the decimal point
+# Clean out commented tests
+# Save files and translation to disk for auditing.
 
 class Compare():
     def __init__(self):
@@ -48,27 +58,27 @@ class Compare():
         self.nlpfr = fr_core_news_lg.load()  # French
         self.nlpes = es_core_news_lg.load()  # Spanish
 
-
-
-
         # Initialize the translation dictionary
         self.translations = {}
-        template={"url": "", 
-        "text": "", 
-        "language": "", 
-        "object": "",
-        "keywords": {},
-        "complement_text": "", 
-        "complement_language": "",
-        "complement_object": "",
-        "complement_keywords": {},
-        "third_text": "",
-        "third_language": "",
-        "third_object": "",
-        "third_keywords": {}}
-        
+        template = {"url": "",
+                    "text": "",
+                    "language": "",
+                    "object": "",
+                    "keywords": {},
+                    "complement_text": "",
+                    "complement_language": "",
+                    "complement_object": "",
+                    "complement_keywords": {},
+                    "third_text": "",
+                    "third_language": "",
+                    "third_object": "",
+                    "third_keywords": {}}
+
         self.translations[0] = template
         self.translations[1] = template
+
+        # Instantiate BERT multilingual transformor
+        self.bert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
 
     def comparepages(self, url1, language1, url2, language2):
         self.url1 = url1
@@ -82,28 +92,30 @@ class Compare():
             self.url2), "language": self.language2}
 
         for i in self.translations:
-            self.translations[i]["complement"], \
-            self.translations[i]["object"], \
-            self.translations[i]["complement_object"], \
-            self.translations[i]["complement_language"] \
-            = self.get_translation( \
-                self.translations[i]["text"], \
-                self.translations[i]["language"], \
+            self.translations[i]["complement_text"], \
+                self.translations[i]["object"], \
+                self.translations[i]["complement_object"], \
+                self.translations[i]["complement_language"] \
+                = self.get_translation(
+                self.translations[i]["text"],
+                self.translations[i]["language"],
                 self.complement_language(self.translations[i]["language"]))
 
-
             self.translations[i]["third_text"], \
-            self.translations[i]["object"], \
-            self.translations[i]["third_object"], \
-            self.translations[i]["third_language"] \
-            = self.get_translation( \
-                self.translations[i]["text"], \
-                self.translations[i]["language"], \
+                self.translations[i]["object"], \
+                self.translations[i]["third_object"], \
+                self.translations[i]["third_language"] \
+                = self.get_translation(
+                self.translations[i]["text"],
+                self.translations[i]["language"],
                 "es")
 
-            self.translations[i]["keywords"] = self.isolate_words(self.translations[i]["object"])
-            self.translations[i]["complement_keywords"] = self.isolate_words(self.translations[i]["complement_object"])
-            self.translations[i]["third_keywords"] = self.isolate_words(self.translations[i]["third_object"])
+            self.translations[i]["keywords"] = self.isolate_words(
+                self.translations[i]["object"])
+            self.translations[i]["complement_keywords"] = self.isolate_words(
+                self.translations[i]["complement_object"])
+            self.translations[i]["third_keywords"] = self.isolate_words(
+                self.translations[i]["third_object"])
 
     def complement_language(self, language):
         if language == "en":
@@ -120,7 +132,8 @@ class Compare():
             sys.exit(1)
 
         # extract the text from the pages
-        page = BeautifulSoup(page.content, features="lxml").get_text(separator=" ")
+        page = BeautifulSoup(
+            page.content, features="lxml").get_text(separator=" ")
         # Strip off excess line endings
         return re.sub(r'\n+', '\n', page)
 
@@ -195,14 +208,14 @@ class Compare():
                     keywords[token.lemma_] = 1
         return keywords
 
-
     # Extract the significant words from the text
-    def clean_text(self, text):
+
+    def clean_text(self, text, language):
         # Extract all the significant words from the source English text
         return_text = ""
-        if text.lang_ == "en":
+        if language == "en":
             stopwords = list(spacy.lang.en.stop_words.STOP_WORDS)
-        elif text.lang_ == "fr":
+        elif language == "fr":
             stopwords = list(spacy.lang.fr.stop_words.STOP_WORDS)
         else:
             stopwords = list(spacy.lang.es.stop_words.STOP_WORDS)
@@ -214,45 +227,91 @@ class Compare():
                 return_text = return_text + " " + token.lemma_
         return return_text
 
-
     def bag_of_words(self, language1_keywords, language2_keywords, language):
         words_in_common = set(language1_keywords.keys()).intersection(
-        set(language2_keywords.keys()))
-        language1_frequency_greater_than_one =  dict(filter(lambda val: val[1] > 1, language1_keywords.items()))
-        language2_frequency_greater_than_one =  dict(filter(lambda val: val[1] > 1, language2_keywords.items()))
-        return ((len(words_in_common)/(len(language1_keywords) +len(language2_keywords)))*100)
+            set(language2_keywords.keys()))
+        language1_frequency_greater_than_one = dict(
+            filter(lambda val: val[1] > 1, language1_keywords.items()))
+        language2_frequency_greater_than_one = dict(
+            filter(lambda val: val[1] > 1, language2_keywords.items()))
+        return ((len(words_in_common)/(len(language1_keywords) + len(language2_keywords)))*100)
+
+    def gut_text(self):
+        for i in range(len(self.translations)):
+            for j in ["", "complement_", "third_"]:
+                self.translations[i][j+"text"] = self.clean_text(
+                    self.translations[i][j+"object"], self.translations[i][j+"language"])
 
     def crosstranslationsimularity(self):
-        return (self.translations[0]["object"].similarity(self.translations[1]["complement_object"]) + \
-            self.translations[1]["object"].similarity(self.translations[0]["complement_object"])) / 2
+        return (self.translations[0]["object"].similarity(self.translations[1]["complement_object"]) +
+                self.translations[1]["object"].similarity(self.translations[0]["complement_object"])) / 2
 
     def thirdpartysimularity(self):
         return self.translations[0]["third_object"].similarity(self.translations[1]["third_object"])
 
     def bowcrosstranslationsimularity(self):
-        return (self.bag_of_words(self.translations[0]["keywords"], self.translations[1]["complement_keywords"], self.translations[0]["language"]) + \
-            self.bag_of_words(self.translations[1]["keywords"], self.translations[0]["complement_keywords"], self.translations[0]["language"])) / (len(self.translations[0]["keywords"]) + len(self.translations[1]["keywords"]))
+        return (self.bag_of_words(self.translations[0]["keywords"], self.translations[1]["complement_keywords"], self.translations[0]["language"]) +
+                self.bag_of_words(self.translations[1]["keywords"], self.translations[0]["complement_keywords"], self.translations[0]["language"])) / (len(self.translations[0]["keywords"]) + len(self.translations[1]["keywords"]))
 
     def bowthirdpartysimularity(self):
         return self.bag_of_words(self.translations[0]["third_keywords"], self.translations[1]["third_keywords"], "es")
 
+    def bertsimularity(self):
+        language1 = self.bert.encode([self.translations[0]["text"]])
+        language2 = self.bert.encode([self.translations[1]["text"]])
+        return cosine_similarity(language1, language2)[0][0]
+
+    def bertcrosssimularity(self):
+        language1 = self.bert.encode([self.translations[0]["text"]])
+        language2 = self.bert.encode([self.translations[1]["text"]])
+        language3 = self.bert.encode([self.translations[0]["complement_text"]])
+        language4 = self.bert.encode([self.translations[1]["complement_text"]])
+        return (cosine_similarity(language1, language4)[0][0] + cosine_similarity(language2, language3)[0][0])/2
+
+    def bert3rdsimularity(self):
+        language1 = self.bert.encode([self.translations[0]["third_text"]])
+        language2 = self.bert.encode([self.translations[1]["third_text"]])
+        return cosine_similarity(language1, language2)[0][0]
+
+
 if __name__ == '__main__':
     f = Compare()
 
-    # testitems = [[ "https://en.wikipedia.org/wiki/Volodymyr_Zelenskyy","en", "https://fr.wikipedia.org/wiki/Volodymyr_Zelenskyy", "fr"],
-    #             [ "https://en.wikipedia.org/wiki/Julius_Caesar","en", "https://fr.wikipedia.org/wiki/Jules_C%C3%A9sar", "fr"],
-    #             [ "https://en.wikipedia.org/wiki/Luge","en", "https://fr.wikipedia.org/wiki/Luge_de_course", "fr"],
+    testitems = [["https://en.wikipedia.org/wiki/Volodymyr_Zelenskyy", "en", "https://fr.wikipedia.org/wiki/Volodymyr_Zelenskyy", "fr"],
+                 ["https://en.wikipedia.org/wiki/Julius_Caesar", "en",
+                     "https://fr.wikipedia.org/wiki/Jules_C%C3%A9sar", "fr"],
+                 ["https://en.wikipedia.org/wiki/Luge", "en",
+                     "https://fr.wikipedia.org/wiki/Luge_de_course", "fr"],
+                 ["https://en.wikipedia.org/wiki/Charles_de_Gaulle", "en",
+                     "https://fr.wikipedia.org/wiki/Charles_de_Gaulle", "fr"],
+                 ["https://en.wikipedia.org/wiki/Charles_de_Gaulle", "en",
+                     "https://fr.wikipedia.org/wiki/Luge_de_course", "fr"],
+                 ]
+
+    # testitems = [
     #             ["https://en.wikipedia.org/wiki/Charles_de_Gaulle","en", "https://fr.wikipedia.org/wiki/Charles_de_Gaulle", "fr"],
     #             ]
 
-    testitems = [
-                ["https://en.wikipedia.org/wiki/Charles_de_Gaulle","en", "https://fr.wikipedia.org/wiki/Charles_de_Gaulle", "fr"],
-                ]
+    # testitems = [
+    #             ["https://en.wikipedia.org/wiki/Charles_de_Gaulle","en", "https://fr.wikipedia.org/wiki/Luge_de_course", "fr"],
+    #             ]
+
+    # Short test article
+    # testitems = [[
+    #     "https://en.wikipedia.org/wiki/Engelbert_Humperdinck_(composer)", "en", "https://fr.wikipedia.org/wiki/Engelbert_Humperdinck", "fr"]]
 
     for i in testitems:
         f.comparepages(i[0], i[1], i[2], i[3])
-        print("\n\nThe similarity scores between {} and {} are...".format(i[0], i[2]))
-        print("Cross translation cosine similarity score", f.crosstranslationsimularity())
+        f.gut_text()
+        print(
+            "\n\nThe similarity scores between {} and {} are...".format(i[0], i[2]))
+        print("Cross translation cosine similarity score",
+              f.crosstranslationsimularity())
         print("Third language  cosine similarity score", f.thirdpartysimularity())
-        print("Bag of Words/ Cross translation similarity score", f.bowcrosstranslationsimularity())
-        print("Bag of Words/ third language translation similarity score", f.bowthirdpartysimularity())
+        print("Raw language BERT cosine similarity score", f.bertsimularity())
+        print("Cross translation language BERT cosine similarity score",
+              f.bertcrosssimularity())
+        print("Third language BERT cosine similarity score", f.bert3rdsimularity())
+
+        # print("Bag of Words/ Cross translation similarity score", f.bowcrosstranslationsimularity())
+        # print("Bag of Words/ third language translation similarity score", f.bowthirdpartysimularity())
