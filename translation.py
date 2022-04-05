@@ -302,7 +302,7 @@ if __name__ == '__main__':
 
     for i in testitems:
         f.comparepages(i[0], i[1], i[2], i[3])
-        f.gut_text()
+        # f.gut_text()
         print(
             "\n\nThe similarity scores between {} and {} are...".format(i[0], i[2]))
         print("Cross translation cosine similarity score",
