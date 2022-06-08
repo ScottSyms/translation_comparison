@@ -346,7 +346,7 @@ if __name__ == '__main__':
 
     # Short test article
     testitems = [[
-        "https://en.wikipedia.org/wiki/Engelbert_Humperdinck_(composer)", "en", "https://fr.wikipedia.org/wiki/Engelbert_Humperdinck", "fr"]]
+        "https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/t4055/t4055-newcomers-canada.html", "en", "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications/t4055/t4055-nouveaux-arrivants-canada.html", "fr"]]
 
     for i in testitems:
         f.comparepages(i[0], i[1], i[2], i[3])

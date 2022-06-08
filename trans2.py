@@ -14,18 +14,18 @@ bert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
 texte=open("english.txt", "r").read()
 textf=open("french.txt", "r").read()
 
-texte="""
-You become a resident of Canada for income tax purposes when you
-establish significant residential ties in Canada. You usually establish
-these ties on the date you arrive in Canada.
-"""
+# texte="""
+# You become a resident of Canada for income tax purposes when you
+# establish significant residential ties in Canada. You usually establish
+# these ties on the date you arrive in Canada.
+# """
 
-textf="""
-Vous devenez un résident du Canada aux fins de l'impôt sur le revenu
-lorsque vous établissez des liens de résidence importants au Canada.
-Vous établissez habituellement ces liens à la date de votre arrivée au
-Canada.
-"""
+# textf="""
+# Vous devenez un résident du Canada aux fins de l'impôt sur le revenu
+# lorsque vous établissez des liens de résidence importants au Canada.
+# Vous établissez habituellement ces liens à la date de votre arrivée au
+# Canada.
+# """
 
 # textf="""
 # On entend par « économie clandestine » les revenus gagnés qui ne sont

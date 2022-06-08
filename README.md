@@ -22,7 +22,21 @@ In the Third language cosine similarity score, both pages are translated to Span
 
 RESULTS
 
-Compare French and Engish wikipedia pages
+Compare French and English  pages
+
+The similarity scores between https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/t4055/t4055-newcomers-canada.html and https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications/t4055/t4055-nouveaux-arrivants-canada.html are...
+```
+Cross translation cosine similarity score 0.9919472970494418
+Third language  cosine similarity score 0.9969921138704929
+Raw language BERT cosine similarity score 0.9125225
+Cross translation language BERT cosine similarity score 0.9342046976089478
+Third language BERT cosine similarity score 0.8359175
+
+On premises translation: French source, English translated to French: 0.9220402240753174
+On premises translation: English source, French translated to English: 0.9298362731933594
+On premises translation: French translated to Spanish, English translated to Spanish: 0.9598286747932434
+
+```
 
 The similarity scores between https://en.wikipedia.org/wiki/Volodymyr_Zelenskyy and https://fr.wikipedia.org/wiki/Volodymyr_Zelenskyy are...
 ```
@@ -68,3 +82,4 @@ Raw language BERT cosine similarity score 0.32892394
 Cross translation language BERT cosine similarity score 0.3530624508857727
 Third language BERT cosine similarity score 0.30099398
 ```
+
