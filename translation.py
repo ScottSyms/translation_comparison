@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import requests
 import re
 import sys
@@ -11,10 +13,44 @@ from string import punctuation
 from bs4 import BeautifulSoup
 import fr_core_news_lg
 import es_core_news_lg
+import warnings
 
 # Bert comparisons
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
+
+# On Premises Translation 
+from transformers import MarianTokenizer, AutoModelForSeq2SeqLM
+
+# Download the translation models
+enfr = 'Helsinki-NLP/opus-mt-en-fr'
+fren = 'Helsinki-NLP/opus-mt-fr-en'
+enes = 'Helsinki-NLP/opus-mt-en-es'
+fres = 'Helsinki-NLP/opus-mt-fr-es'
+
+model={}
+tokenizer={}
+
+# instantiate the English to French tokenizer and model
+tokenizer["enfr"] = MarianTokenizer.from_pretrained(enfr)
+model["enfr"] = AutoModelForSeq2SeqLM.from_pretrained(enfr)
+
+# instantiate the French to English tokenizer and model
+tokenizer["fren"] = MarianTokenizer.from_pretrained(fren)
+model["fren"] = AutoModelForSeq2SeqLM.from_pretrained(fren)
+
+# instantiate the English to Spanish tokenizer and model
+tokenizer["enes"] = MarianTokenizer.from_pretrained(enes)
+model["enes"] = AutoModelForSeq2SeqLM.from_pretrained(enes)
+
+# instantiate the French to Spanish tokenizer and model
+tokenizer["fres"] = MarianTokenizer.from_pretrained(fres)
+model["fres"] = AutoModelForSeq2SeqLM.from_pretrained(fres)
+
+
+# Supress warnings
+warnings.filterwarnings("ignore")
+
 
 
 # ****************************************************************
@@ -72,7 +108,17 @@ class Compare():
                     "third_text": "",
                     "third_language": "",
                     "third_object": "",
-                    "third_keywords": {}}
+                    "third_keywords": {},
+                    "onprem_complement_text": "",
+                    "onprem_complement_language": "",
+                    "onprem_complement_object": "",
+                    "onprem_complement_keywords": {},
+                    "onprem_third_text": "",
+                    "onprem_third_language": "",
+                    "onprem_third_object": "",
+                    "onprem_third_keywords": {}
+                    
+                    }
 
         self.translations[0] = template
         self.translations[1] = template
@@ -117,6 +163,7 @@ class Compare():
             self.translations[i]["third_keywords"] = self.isolate_words(
                 self.translations[i]["third_object"])
 
+    # What's the compementary language?
     def complement_language(self, language):
         if language == "en":
             return "fr"
@@ -285,8 +332,8 @@ if __name__ == '__main__':
                      "https://fr.wikipedia.org/wiki/Luge_de_course", "fr"],
                  ["https://en.wikipedia.org/wiki/Charles_de_Gaulle", "en",
                      "https://fr.wikipedia.org/wiki/Charles_de_Gaulle", "fr"],
-                 ["https://en.wikipedia.org/wiki/Charles_de_Gaulle", "en",
-                     "https://fr.wikipedia.org/wiki/Luge_de_course", "fr"],
+                #  ["https://en.wikipedia.org/wiki/Charles_de_Gaulle", "en",
+                #      "https://fr.wikipedia.org/wiki/Luge_de_course", "fr"],
                  ]
 
     # testitems = [
@@ -298,8 +345,8 @@ if __name__ == '__main__':
     #             ]
 
     # Short test article
-    # testitems = [[
-    #     "https://en.wikipedia.org/wiki/Engelbert_Humperdinck_(composer)", "en", "https://fr.wikipedia.org/wiki/Engelbert_Humperdinck", "fr"]]
+    testitems = [[
+        "https://en.wikipedia.org/wiki/Engelbert_Humperdinck_(composer)", "en", "https://fr.wikipedia.org/wiki/Engelbert_Humperdinck", "fr"]]
 
     for i in testitems:
         f.comparepages(i[0], i[1], i[2], i[3])

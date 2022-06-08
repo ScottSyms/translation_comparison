@@ -1,0 +1,40 @@
+Cosine Similarity Scores
+French source, Engqlish translated to French: 0.9220402240753174
+English source, French translated to English: 0.9298362731933594
+French translated to Spanish, English translated to Spanish: 0.9598286747932434
+
+
+***********************************************************
+
+French from English
+Vous devenez un résident du Canada aux fins de l'impôt sur le revenu lorsque vous établissez des liens de résidence importants au Canada. Vous établissez habituellement ces liens à la date d'arrivée au Canada.. Le présent règlement entre en vigueur le jour suivant celui de sa publication au Journal officiel de l'Union européenne.. 
+
+
+
+
+***********************************************************
+
+English from French
+You become a resident of Canada for income tax purposes when you establish significant residential ties in Canada. You usually establish these links on the date of your arrival in Canada. I'm sorry, but I don't know.. 
+
+
+
+
+***********************************************************
+
+Spanish from English
+Usted se convierte en residente de Canadá a efectos del impuesto sobre la renta cuando establece importantes vínculos residenciales en Canadá. Usualmente estableces estos lazos en la fecha en que llegas a Canadá. - No, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no.. 
+
+
+
+
+***********************************************************
+
+Spanish from French
+Usted se convierte en un residente de Canadá a efectos del impuesto sobre la renta cuando usted establece vínculos de residencia importantes en Canadá. Por lo general, establece estos enlaces en la fecha de su llegada a Canadá.. - No, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no, no.. 
+
+
+
+
+***********************************************************
+
