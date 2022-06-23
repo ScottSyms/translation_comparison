@@ -139,7 +139,7 @@ class azuretranslate():
                 body = [{'text': i }]
                 request = requests.post(self.constructed_url, params=params, headers=self.headers, json=body)
                 webpageobject.english=webpageobject.english + request.json()[0]["translations"][0]["text"] + ".\n"
-            webpageobject.nlpfrench=webpageobject.nlpfr(webpageobject.french)
+            webpageobject.nlpenglish=webpageobject.nlpen(webpageobject.english)
 
             #  French to Spanish tokenizer and model
             print("Translating French to Spanish")
@@ -216,13 +216,33 @@ class localtranslate():
 
 class textcompare():
     def __init__(self, firstobject, secondobject):
-        self.englishcompare=firstobject.nlpenglish.similarity(secondobject.nlpenglish)
-        print("Similarity score", self.englishcompare)
+        # Instantiate BERT multilingual transformor
+        self.bert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+
+        self.englishcompare=firstobject.nlpenglish.similarity(secondobject.nlpenglish)*100
+        self.frenchcompare=firstobject.nlpfrench.similarity(secondobject.nlpfrench)*100
+        self.spanishcompare=firstobject.nlpspanish.similarity(secondobject.nlpspanish)*100
+
+        self.bertenglish1 = self.bert.encode([firstobject.english])
+        self.bertfrench1 = self.bert.encode([firstobject.french])
+        self.bertspanish1 = self.bert.encode([firstobject.spanish])
+
+        self.bertenglish2 = self.bert.encode([firstobject.english])
+        self.bertfrench2 = self.bert.encode([firstobject.french])
+        self.bertspanish2 = self.bert.encode([firstobject.spanish])
             
+        print("SpaCy French similarity score: %6.2f" % self.frenchcompare)
+        print("SpaCy English similarity score: %6.2f" % self.englishcompare)
+        print("SpaCy Spanish similarity score: %6.2f" % self.spanishcompare)
 
-    def singlelanguagesimularity(self):
-        return self.translations[0]["third_object"].similarity(self.translations[1]["third_object"])
+        bertfrench=float(cosine_similarity(self.bertfrench1, self.bertfrench2)[0][0]) * 100
+        bertenglish=float(cosine_similarity(self.bertenglish1, self.bertenglish2)[0][0]) * 100
+        bertspanish=float(cosine_similarity(self.bertspanish1, self.bertspanish2)[0][0]) *100
 
+        print("BERT French similarity score: %6.2f" % bertfrench)
+        print("BERT English similarity score:  %6.2f" % bertenglish)
+        print("BERT Spanish similarity score:  %6.2f" % bertspanish)
+    
 
 
 
