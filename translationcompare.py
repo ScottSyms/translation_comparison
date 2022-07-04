@@ -54,8 +54,12 @@ class webpage():
         # extract the text from the pages
         page = BeautifulSoup(
             page.content, features="lxml").get_text(separator=" ")
+        
         # Strip off excess line endings
         self.pagetext=re.sub(r'\n+[ \n]*', '\n', page)
+
+        # Restrict to ASCII characters
+        self.pagetext=self.pagetext.encode("ascii", errors="ignore").decode()
 
         # We use SpaCy to do some local processing of the text
         # Load the language token lists
@@ -64,13 +68,16 @@ class webpage():
         self.nlpfr = fr_core_news_lg.load()  # French
         self.nlpes = es_core_news_lg.load()  # Spanish
 
-            # Return language object
+        # Return SpaCy language object
         if LANG == "ENGLISH":
             self.nlpobject = self.nlpen(self.pagetext)
         elif LANG == "FRENCH":
             self.nlpobject = self.nlpfr(self.pagetext)
-        else:
+        elif LANG == "SPANISH":
            self.nlpobject = self.nlpes(self.pagetext)
+        else:
+            self.nlpobject= None
+        
 
 class azuretranslate():
     def __init__(self, webpageobject):
@@ -173,8 +180,23 @@ class localtranslate():
             print("Translating English to French")
             self.tokenizer["ENGLISHFRENCH"] = MarianTokenizer.from_pretrained(enfr)
             self.model["ENGLISHFRENCH"] = AutoModelForSeq2SeqLM.from_pretrained(enfr)
-            for i in webpageobject.pagetext.split("."):
-                webpageobject.french=webpageobject.french + self.translate(i, "ENGLISHFRENCH")
+
+            # Break up the data into digestable benefits
+            # The local translation doesn't like tokens greater than 512 words.            
+            translation_text=[]
+            for i in webpageobject.nlpobject.sents:
+                if len(i.text) > 500:
+                    translation_text.append(i.text[:300])
+                    translation_text.append(i.text[300:])
+                elif len(i.text.strip()) == 0:
+                    pass
+                else:
+                    translation_text.append(i.text)
+            for i in translation_text:
+                try:
+                    webpageobject.french=webpageobject.french + self.translate(i, "ENGLISHFRENCH")
+                except:
+                    pass
             webpageobject.nlpfrench=webpageobject.nlpfr(webpageobject.french)
 
 
@@ -182,8 +204,22 @@ class localtranslate():
             print("Translating English to Spanish")
             self.tokenizer["ENGLISHSPANISH"] = MarianTokenizer.from_pretrained(enes)
             self.model["ENGLISHSPANISH"] = AutoModelForSeq2SeqLM.from_pretrained(enes)
-            for i in webpageobject.pagetext.split("."):
-                webpageobject.spanish=webpageobject.spanish + self.translate(i, "ENGLISHSPANISH")
+            # Break up the data into digestable benefits
+            # The local translation doesn't like tokens greater than 512 words.            
+            translation_text=[]
+            for i in webpageobject.nlpobject.sents:
+                if len(i.text) > 500:
+                    translation_text.append(i.text[:300])
+                    translation_text.append(i.text[300:])
+                elif len(i.text.strip()) == 0:
+                    pass
+                else:                    
+                    translation_text.append(i.text)
+            for i in translation_text:
+                try:
+                    webpageobject.spanish=webpageobject.spanish + self.translate(i, "ENGLISHSPANISH")
+                except:
+                    pass
             webpageobject.nlpspanish=webpageobject.nlpes(webpageobject.spanish)
 
         else:
@@ -194,8 +230,23 @@ class localtranslate():
             print("Translating French to English")
             self.tokenizer["FRENCHENGLISH"] = MarianTokenizer.from_pretrained(fren)
             self.model["FRENCHENGLISH"] = AutoModelForSeq2SeqLM.from_pretrained(fren)
-            for i in webpageobject.pagetext.split("."):
-                webpageobject.english=webpageobject.english + self.translate(i, "FRENCHENGLISH")
+
+            # Break up the data into digestable benefits
+            # The local translation doesn't like tokens greater than 512 words.            
+            translation_text=[]
+            for i in webpageobject.nlpobject.sents:
+                if len(i.text) > 500:
+                    translation_text.append(i.text[:300])
+                    translation_text.append(i.text[300:])
+                elif len(i.text.strip()) == 0:
+                    pass
+                else:
+                    translation_text.append(i.text)
+            for i in translation_text:
+                try:
+                    webpageobject.english=webpageobject.english + self.translate(i, "FRENCHENGLISH")
+                except:
+                    pass
             webpageobject.nlpenglish=webpageobject.nlpen(webpageobject.english)
 
             
@@ -203,15 +254,30 @@ class localtranslate():
             print("Translating French to Spanish")
             self.tokenizer["FRENCHSPANISH"] = MarianTokenizer.from_pretrained(fres)
             self.model["FRENCHSPANISH"] = AutoModelForSeq2SeqLM.from_pretrained(fres)
-            for i in webpageobject.pagetext.split("."):
-                webpageobject.spanish=webpageobject.spanish + self.translate(i, "FRENCHSPANISH")
+
+            # Break up the data into digestable benefits
+            # The local translation doesn't like tokens greater than 512 words.            
+            translation_text=[]
+            for i in webpageobject.nlpobject.sents:
+                if len(i.text) > 500:
+                    translation_text.append(i.text[:300])
+                    translation_text.append(i.text[300:])
+                elif len(i.text.strip()) == 0:
+                    pass
+                else:
+                    translation_text.append(i.text)
+            for i in translation_text:
+                try:
+                    webpageobject.spanish=webpageobject.spanish + self.translate(i, "FRENCHSPANISH")
+                except:
+                    pass
             webpageobject.nlpspanish=webpageobject.nlpes(webpageobject.spanish)
 
 
     def translate(self, TEXT, LANGVECTOR):
-        input_ids = self.tokenizer[LANGVECTOR].encode(TEXT, return_tensors="pt")
+        input_ids = self.tokenizer[LANGVECTOR].encode(TEXT, return_tensors="pt", truncation=True, max_length=500)
         outputs = self.model[LANGVECTOR].generate(input_ids)
-        return self.tokenizer[LANGVECTOR].decode(outputs[0], skip_special_tokens=True)
+        return self.tokenizer[LANGVECTOR].decode(outputs[0], skip_special_tokens=True, truncation=True, max_length=500)
 
 
 class textcompare():
@@ -219,9 +285,9 @@ class textcompare():
         # Instantiate BERT multilingual transformor
         self.bert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
 
-        self.englishcompare=firstobject.nlpenglish.similarity(secondobject.nlpenglish)*100
-        self.frenchcompare=firstobject.nlpfrench.similarity(secondobject.nlpfrench)*100
-        self.spanishcompare=firstobject.nlpspanish.similarity(secondobject.nlpspanish)*100
+        self.englishcompare=firstobject.nlpenglish.similarity(secondobject.nlpenglish)
+        self.frenchcompare=firstobject.nlpfrench.similarity(secondobject.nlpfrench)
+        self.spanishcompare=firstobject.nlpspanish.similarity(secondobject.nlpspanish)
 
         self.bertenglish1 = self.bert.encode([firstobject.english])
         self.bertfrench1 = self.bert.encode([firstobject.french])
@@ -235,9 +301,9 @@ class textcompare():
         print("SpaCy English similarity score: %6.2f" % self.englishcompare)
         print("SpaCy Spanish similarity score: %6.2f" % self.spanishcompare)
 
-        bertfrench=float(cosine_similarity(self.bertfrench1, self.bertfrench2)[0][0]) * 100
-        bertenglish=float(cosine_similarity(self.bertenglish1, self.bertenglish2)[0][0]) * 100
-        bertspanish=float(cosine_similarity(self.bertspanish1, self.bertspanish2)[0][0]) *100
+        bertfrench=cosine_similarity(self.bertfrench1, self.bertfrench2)[0][0]
+        bertenglish=cosine_similarity(self.bertenglish1, self.bertenglish2)[0][0]
+        bertspanish=cosine_similarity(self.bertspanish1, self.bertspanish2)[0][0]
 
         print("BERT French similarity score: %6.2f" % bertfrench)
         print("BERT English similarity score:  %6.2f" % bertenglish)
