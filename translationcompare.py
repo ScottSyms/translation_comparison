@@ -1,37 +1,42 @@
 #!/usr/bin/env python
 
-# Module imports
-import warnings
+# Some code borrowed from 
+# https://stackoverflow.com/questions/68185061/strange-results-with-huggingface-transformermarianmt-translation-of-larger-tex
 
 # Supress warnings
+import warnings
 warnings.filterwarnings("ignore")
 
+# Pedestrian imports
 import requests
 import re
 import sys
-import pprint
 import os
 import uuid
 import json
+import math
+
+# For hosting keys in a separate file
 from dotenv import load_dotenv
-import spacy
-from string import punctuation
+
+# XML handling imports
+# from string import punctuation
 from bs4 import BeautifulSoup
+
+# NLP like imports
+import spacy
 import fr_core_news_lg
 import es_core_news_lg
+from nltk.tokenize import sent_tokenize
+from nltk.tokenize import LineTokenizer
+import torch
 
 # Bert comparisons
 from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 
 # On Premises Translation 
-from transformers import MarianTokenizer, AutoModelForSeq2SeqLM
-
-print("test")
-
-class translator():
-    def __init__():
-        pass
+from transformers import MarianMTModel, MarianTokenizer
 
 class webpage():
     def __init__(self, URL, LANG):
@@ -44,12 +49,12 @@ class webpage():
             sys.exit(1)
 
         # Some globals
-        self.french=""
-        self.english=""
-        self.spanish=""
+        self.nlpmodel={}
+        self.nlpobject={}
         self.nlpfrench=""
         self.nlpenglish=""
-        self.nlpspanish=""        
+        self.nlpspanish=""
+        self.version={}        
 
         # extract the text from the pages
         page = BeautifulSoup(
@@ -64,22 +69,17 @@ class webpage():
         # We use SpaCy to do some local processing of the text
         # Load the language token lists
         print("Loading language files...")
-        self.nlpen = spacy.load("en_core_web_lg")  # English
-        self.nlpfr = fr_core_news_lg.load()  # French
-        self.nlpes = es_core_news_lg.load()  # Spanish
+        self.nlpmodel["en"] = spacy.load("en_core_web_lg")  # English
+        self.nlpmodel["fr"] = fr_core_news_lg.load()        # French
+        self.nlpmodel["es"] = es_core_news_lg.load()        # Spanish
 
         # Return SpaCy language object
-        if LANG == "ENGLISH":
-            self.nlpobject = self.nlpen(self.pagetext)
-        elif LANG == "FRENCH":
-            self.nlpobject = self.nlpfr(self.pagetext)
-        elif LANG == "SPANISH":
-           self.nlpobject = self.nlpes(self.pagetext)
-        else:
-            self.nlpobject= None
+        self.nlpobject[LANG]=self.nlpmodel[LANG](self.pagetext)
         
 
 class azuretranslate():
+    # This code hasn't been updated to match  and won't likely work.
+
     def __init__(self, webpageobject):
         webpageobject.french = ""
         webpageobject.english = ""
@@ -116,7 +116,7 @@ class azuretranslate():
 
 
         # Instantiate models and tokenizers
-        if webpageobject.LANG == "ENGLISH":
+        if webpageobject.LANG == "en":
             webpageobject.english=webpageobject.pagetext
             webpageobject.nlpenglish=webpageobject.nlpes(webpageobject.pagetext)
 
@@ -160,142 +160,78 @@ class azuretranslate():
 
 class localtranslate():
     def __init__(self, webpageobject):
-
-        # Download the on-premises translation models
-        enfr = 'Helsinki-NLP/opus-mt-en-fr'
-        fren = 'Helsinki-NLP/opus-mt-fr-en'
-        enes = 'Helsinki-NLP/opus-mt-en-es'
-        fres = 'Helsinki-NLP/opus-mt-fr-es'
+        if torch.cuda.is_available():  
+            self.dev = "cuda"
+        else:  
+            self.dev = "cpu" 
+        self.device = torch.device(self.dev)
 
         # Initialize empty dictionaries for on prem tokenizer and model
         self.model={}
         self.tokenizer={}
 
-        # Instantiate models and tokenizers
-        if webpageobject.LANG == "ENGLISH":
-            webpageobject.english=webpageobject.pagetext
-            webpageobject.nlpenglish=webpageobject.nlpen(webpageobject.pagetext)
+        lt = LineTokenizer()
+        batch_size = 8
 
-            # English to French
-            print("Translating English to French")
-            self.tokenizer["ENGLISHFRENCH"] = MarianTokenizer.from_pretrained(enfr)
-            self.model["ENGLISHFRENCH"] = AutoModelForSeq2SeqLM.from_pretrained(enfr)
+        # Capture the current text in a language bucket
+        print("SOURCE LANGUAGE: ", webpageobject.LANG)
+        webpageobject.version[webpageobject.LANG]=webpageobject.pagetext
+        webpageobject.nlpobject[webpageobject.LANG]=webpageobject.nlpmodel[webpageobject.pagetext]
 
-            # Break up the data into digestable benefits
-            # The local translation doesn't like tokens greater than 512 words.            
-            translation_text=[]
-            for i in webpageobject.nlpobject.sents:
-                if len(i.text) > 500:
-                    translation_text.append(i.text[:300])
-                    translation_text.append(i.text[300:])
-                elif len(i.text.strip()) == 0:
-                    pass
-                else:
-                    translation_text.append(i.text)
-            for i in translation_text:
-                try:
-                    webpageobject.french=webpageobject.french + self.translate(i, "ENGLISHFRENCH")
-                except:
-                    pass
-            webpageobject.nlpfrench=webpageobject.nlpfr(webpageobject.french)
+        # Languages other then the sample are our translation targets.
+        targetlanguages = [x for x in ["fr", "en", "es"] if webpageobject.LANG != x]
+        print("TARGET LANGUAGES: ", targetlanguages)
 
+        # Iterate through the language targets and translate
+        for targetlanguage in targetlanguages:
+            # Set up the model for translation. This depends upon the structured naming convention
+            # for the Hugging Face models, eg/ Helsinki-NLP/opus-mt- followed by the source language, 
+            # a hyphen and then a target language.
+            translation_required = "Helsinki-NLP/opus-mt-" + webpageobject.LANG + "-" + targetlanguage
 
-            # English to Spanish
-            print("Translating English to Spanish")
-            self.tokenizer["ENGLISHSPANISH"] = MarianTokenizer.from_pretrained(enes)
-            self.model["ENGLISHSPANISH"] = AutoModelForSeq2SeqLM.from_pretrained(enes)
-            # Break up the data into digestable benefits
-            # The local translation doesn't like tokens greater than 512 words.            
-            translation_text=[]
-            for i in webpageobject.nlpobject.sents:
-                if len(i.text) > 500:
-                    translation_text.append(i.text[:300])
-                    translation_text.append(i.text[300:])
-                elif len(i.text.strip()) == 0:
-                    pass
-                else:                    
-                    translation_text.append(i.text)
-            for i in translation_text:
-                try:
-                    webpageobject.spanish=webpageobject.spanish + self.translate(i, "ENGLISHSPANISH")
-                except:
-                    pass
-            webpageobject.nlpspanish=webpageobject.nlpes(webpageobject.spanish)
+            print("Translating with " + translation_required)
+            tokenizer = MarianTokenizer.from_pretrained(translation_required)
+            model = MarianMTModel.from_pretrained(translation_required)
+            model.to(self.device)
 
-        else:
-            webpageobject.french=webpageobject.pagetext
-            webpageobject.nlpfrench=webpageobject.nlpfr(webpageobject.pagetext)
+            # Break up the data into digestable bits
+            # The local translation doesn't like source text greater than 512 words.
+            paragraphs = lt.tokenize(webpageobject.pagetext)   
+            translated_paragraphs = []
 
-            # French to English
-            print("Translating French to English")
-            self.tokenizer["FRENCHENGLISH"] = MarianTokenizer.from_pretrained(fren)
-            self.model["FRENCHENGLISH"] = AutoModelForSeq2SeqLM.from_pretrained(fren)
-
-            # Break up the data into digestable benefits
-            # The local translation doesn't like tokens greater than 512 words.            
-            translation_text=[]
-            for i in webpageobject.nlpobject.sents:
-                if len(i.text) > 500:
-                    translation_text.append(i.text[:300])
-                    translation_text.append(i.text[300:])
-                elif len(i.text.strip()) == 0:
-                    pass
-                else:
-                    translation_text.append(i.text)
-            for i in translation_text:
-                try:
-                    webpageobject.english=webpageobject.english + self.translate(i, "FRENCHENGLISH")
-                except:
-                    pass
-            webpageobject.nlpenglish=webpageobject.nlpen(webpageobject.english)
-
+            for paragraph in paragraphs:
+                sentences = sent_tokenize(paragraph)
+                batches = math.ceil(len(sentences) / batch_size)     
+                translated = []
+                for i in range(batches):
+                    sent_batch = sentences[i*batch_size:(i+1)*batch_size]
+                    model_inputs = tokenizer(sent_batch, return_tensors="pt", padding=True, truncation=True, max_length=500).to(self.device)
+                    with torch.no_grad():
+                        translated_batch = model.generate(**model_inputs)
+                    translated += translated_batch
+                translated = [tokenizer.decode(t, skip_special_tokens=True) for t in translated]
+                translated_paragraphs += [" ".join(translated)]
+            webpageobject.version[targetlanguage] = "\n".join(translated_paragraphs)
+            webpageobject.nlpobject[targetlanguage]=webpageobject.nlpmodel[webpageobject.version[targetlanguage]]
             
-            #  French to Spanish tokenizer and model
-            print("Translating French to Spanish")
-            self.tokenizer["FRENCHSPANISH"] = MarianTokenizer.from_pretrained(fres)
-            self.model["FRENCHSPANISH"] = AutoModelForSeq2SeqLM.from_pretrained(fres)
-
-            # Break up the data into digestable benefits
-            # The local translation doesn't like tokens greater than 512 words.            
-            translation_text=[]
-            for i in webpageobject.nlpobject.sents:
-                if len(i.text) > 500:
-                    translation_text.append(i.text[:300])
-                    translation_text.append(i.text[300:])
-                elif len(i.text.strip()) == 0:
-                    pass
-                else:
-                    translation_text.append(i.text)
-            for i in translation_text:
-                try:
-                    webpageobject.spanish=webpageobject.spanish + self.translate(i, "FRENCHSPANISH")
-                except:
-                    pass
-            webpageobject.nlpspanish=webpageobject.nlpes(webpageobject.spanish)
-
-
-    def translate(self, TEXT, LANGVECTOR):
-        input_ids = self.tokenizer[LANGVECTOR].encode(TEXT, return_tensors="pt", truncation=True, max_length=500)
-        outputs = self.model[LANGVECTOR].generate(input_ids)
-        return self.tokenizer[LANGVECTOR].decode(outputs[0], skip_special_tokens=True, truncation=True, max_length=500)
-
+            
 
 class textcompare():
     def __init__(self, firstobject, secondobject):
         # Instantiate BERT multilingual transformor
         self.bert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
 
-        self.englishcompare=firstobject.nlpenglish.similarity(secondobject.nlpenglish)
-        self.frenchcompare=firstobject.nlpfrench.similarity(secondobject.nlpfrench)
-        self.spanishcompare=firstobject.nlpspanish.similarity(secondobject.nlpspanish)
+        self.englishcompare=firstobject.nlpobject['en'].similarity(secondobject.nlpobject['en'])
+        self.frenchcompare=firstobject.nlpobject['fr'].similarity(secondobject.nlpobject['fr'])
+        self.spanishcompare=firstobject.nlpobject['es'].similarity(secondobject.nlpobject['es'])
 
-        self.bertenglish1 = self.bert.encode([firstobject.english])
-        self.bertfrench1 = self.bert.encode([firstobject.french])
-        self.bertspanish1 = self.bert.encode([firstobject.spanish])
+        self.bertenglish1 = self.bert.encode([firstobject.version['en']])
+        self.bertfrench1 = self.bert.encode([firstobject.version['fr']])
+        self.bertspanish1 = self.bert.encode([firstobject.version['es']])
 
-        self.bertenglish2 = self.bert.encode([firstobject.english])
-        self.bertfrench2 = self.bert.encode([firstobject.french])
-        self.bertspanish2 = self.bert.encode([firstobject.spanish])
+        self.bertenglish2 = self.bert.encode([secondobject.version['en']])
+        self.bertfrench2 = self.bert.encode([secondobject.version['fr']])
+        self.bertspanish2 = self.bert.encode([secondobject.version['es']])
             
         print("SpaCy French similarity score: %6.2f" % self.frenchcompare)
         print("SpaCy English similarity score: %6.2f" % self.englishcompare)
@@ -309,11 +245,3 @@ class textcompare():
         print("BERT English similarity score:  %6.2f" % bertenglish)
         print("BERT Spanish similarity score:  %6.2f" % bertspanish)
     
-
-
-
-# ****************************************************************
-# TODO
-# Format numbers in the comparisons, ie/ fixed digits after the decimal point
-# Clean out commented tests
-# Save files and translation to disk for auditing

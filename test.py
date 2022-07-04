@@ -3,20 +3,20 @@ import translationcompare
 def testtranslation(description, englishpage, frenchpage):
     # Heritage Canada
     print("\n\n\n" + description)
-    english=translationcompare.webpage(englishpage, "ENGLISH")
-    french=translationcompare.webpage(frenchpage, "FRENCH")
+    english=translationcompare.webpage(englishpage, "en")
+    french=translationcompare.webpage(frenchpage, "fr")
 
-    f=open("flang.txt", "w")
-    f.write(french.pagetext)
-    f.close()
+    # f=open("flang.txt", "w")
+    # f.write(french.pagetext)
+    # f.close()
 
     # Translate with Local Translator
-    # print("Translate with Local Services")
-    # translated_english=translationcompare.localtranslate(english)
+    print("Translate with Local Services")
+    translated_english=translationcompare.localtranslate(english)
     # translated_french=translationcompare.localtranslate(french)
 
     # # Compare page content
-    # throwaway = translationcompare.textcompare(english, french)
+    throwaway = translationcompare.textcompare(english, french)
 
     # # Translate with Azure
     # print("     Azure translation")
@@ -25,6 +25,8 @@ def testtranslation(description, englishpage, frenchpage):
 
     # # Compare page content
     # throwaway = translationcompare.textcompare(english, french)
+    # print(translated_english.french)
+    # print(english.version['fr'])
     print("+++++++++++++++++++\n\n")
 
 # # Test 1
