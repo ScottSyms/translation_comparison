@@ -33,7 +33,7 @@ import torch
 
 # Bert comparisons
 from sklearn.metrics.pairwise import cosine_similarity
-# from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer
 
 # On Premises Translation 
 from transformers import MarianMTModel, MarianTokenizer
@@ -72,6 +72,7 @@ class webpage():
         self.nlpmodel["en"] = spacy.load("en_core_web_lg")  # English
         self.nlpmodel["fr"] = fr_core_news_lg.load()        # French
         self.nlpmodel["es"] = es_core_news_lg.load()        # Spanish
+        
 
         # Return SpaCy language object
         self.nlpobject[LANG]=self.nlpmodel[LANG](self.pagetext)
@@ -176,7 +177,7 @@ class localtranslate():
         # Capture the current text in a language bucket
         print("SOURCE LANGUAGE: ", webpageobject.LANG)
         webpageobject.version[webpageobject.LANG]=webpageobject.pagetext
-        webpageobject.nlpobject[webpageobject.LANG]=webpageobject.nlpmodel[webpageobject.pagetext]
+        webpageobject.nlpobject[webpageobject.LANG]=webpageobject.nlpmodel[webpageobject.LANG](webpageobject.pagetext)
 
         # Languages other then the sample are our translation targets.
         targetlanguages = [x for x in ["fr", "en", "es"] if webpageobject.LANG != x]
@@ -212,7 +213,7 @@ class localtranslate():
                 translated = [tokenizer.decode(t, skip_special_tokens=True) for t in translated]
                 translated_paragraphs += [" ".join(translated)]
             webpageobject.version[targetlanguage] = "\n".join(translated_paragraphs)
-            webpageobject.nlpobject[targetlanguage]=webpageobject.nlpmodel[webpageobject.version[targetlanguage]]
+            webpageobject.nlpobject[targetlanguage]=webpageobject.nlpmodel[targetlanguage](webpageobject.version[targetlanguage])
             
             
 
