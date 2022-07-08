@@ -163,8 +163,10 @@ class localtranslate():
     def __init__(self, webpageobject):
         if torch.cuda.is_available():  
             self.dev = "cuda"
+            print("Using CUDA")
         else:  
             self.dev = "cpu" 
+            print("Using CPU")
         self.device = torch.device(self.dev)
 
         # Initialize empty dictionaries for on prem tokenizer and model
