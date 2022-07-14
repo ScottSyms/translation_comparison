@@ -23,23 +23,35 @@ def testtranslation(description, englishpage, frenchpage):
 
     print("+++++++++++++++++++\n\n")
 
-# Test 1
-testtranslation("Hockey Canada landing page", "https://www.hockeycanada.ca/en-ca/home", "https://www.hockeycanada.ca/fr-ca/home")
+# Test 
+testtranslation("Full test data", "https://github.com/ScottSyms/translation_comparison/tests/full-en.txt", "https://github.com/ScottSyms/translation_comparison/tests/full-fr.txt")
 
-# Test 2
-testtranslation("Contrasting content", "https://www.hockeycanada.ca/en-ca/home", "https://fencing.ca/fr/")
+# Test 
+testtranslation("Three quarters", "https://github.com/ScottSyms/translation_comparison/tests/3fourths-en.txt", "https://github.com/ScottSyms/translation_comparison/tests/full-fr.txt")
 
-# Test 3
-testtranslation("Contrasting Content 2", "http://slashdot.org", "https://fencing.ca/fr/")
+# Test 
+testtranslation("One Half", "https://github.com/ScottSyms/translation_comparison/tests/1half-en.txt", "https://github.com/ScottSyms/translation_comparison/tests/full-fr.txt")
 
- # Test 3
-testtranslation("Fencing Canada Federation", "https://fencing.ca/", "https://fencing.ca/fr/")
+# Test 
+testtranslation("One quarter", "https://github.com/ScottSyms/translation_comparison/tests/1fourth-en.txt", "https://github.com/ScottSyms/translation_comparison/tests/full-fr.txt")
 
-# Test 3
-testtranslation("Swimming Canada", "https://www.swimming.ca/en/", "https://www.swimming.ca/fr/")
+# # Test
+# testtranslation("Hockey Canada landing page", "https://www.hockeycanada.ca/en-ca/home", "https://www.hockeycanada.ca/fr-ca/home")
 
-# Test 4
-testtranslation("Volleyball Canada", "https://volleyball.ca/en/news/canada-edged-by-germany-in-vnl", "https://volleyball.ca/fr/actualites/le-canada-subit-une-defaite-serree-contre-l-allemagne-en-ligue-des-nations")
+# # Test
+# testtranslation("Contrasting content", "https://www.hockeycanada.ca/en-ca/home", "https://fencing.ca/fr/")
 
-# Test 5
-testtranslation("Swimming Canada", "https://www.swimming.ca/en/", "https://www.swimming.ca/fr/")
+# # Test
+# testtranslation("Contrasting Content 2", "http://slashdot.org", "https://fencing.ca/fr/")
+
+#  # Test
+# testtranslation("Fencing Canada Federation", "https://fencing.ca/", "https://fencing.ca/fr/")
+
+# # Test
+# testtranslation("Swimming Canada", "https://www.swimming.ca/en/", "https://www.swimming.ca/fr/")
+
+# # Test
+# testtranslation("Volleyball Canada", "https://volleyball.ca/en/news/canada-edged-by-germany-in-vnl", "https://volleyball.ca/fr/actualites/le-canada-subit-une-defaite-serree-contre-l-allemagne-en-ligue-des-nations")
+
+# # Test
+# testtranslation("Swimming Canada", "https://www.swimming.ca/en/", "https://www.swimming.ca/fr/")

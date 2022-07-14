@@ -1,0 +1,5 @@
+The Wankel engine has the advantages of compact design and low weight over the more common internal combustion engine, which uses reciprocating pistons. These rotary engine applications give advantages in a variety of vehicles and devices, including automobiles, motorcycles, racing cars, aircraft, go-karts, jet skis, snowmobiles, chainsaws, and auxiliary power units. Certain Wankel engines have a power-to-weight ratio over one horsepower per pound.[2] Most engines of the design are of spark ignition, with compression ignition engines having been built only in research projects.
+
+
+
+The easiest way to visualize the action of the engine in the animation is to look not at the rotor itself, but the cavity created between it and the housing. The Wankel engine is actually a variable-volume progressing-cavity system. Thus, the three cavities per housing all repeat the same cycle. Points A and B on the rotor and E-shaft turn at different speeds—point B circles three times as often as point A does, so that one full orbit of the rotor equates to three turns of the E-shaft.
