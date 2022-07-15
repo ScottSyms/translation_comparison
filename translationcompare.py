@@ -33,13 +33,25 @@ import torch
 
 # Bert comparisons
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sentence_transformers import SentenceTransformer
 
 # On Premises Translation 
 from transformers import MarianMTModel, MarianTokenizer
 
+class languagemodels():
+    def __init__(self):
+        # We use SpaCy to do some local processing of the text
+        self.nlpmodel={}
+
+        # Load the language token lists
+        print("Loading language files...")
+        self.nlpmodel["en"] = spacy.load("en_core_web_lg")  # English
+        self.nlpmodel["fr"] = fr_core_news_lg.load()        # French
+        self.nlpmodel["es"] = es_core_news_lg.load()        # Spanish
+
 class webpage():
-    def __init__(self, URL, LANG):
+    def __init__(self, URL, LANG, languagemodels):
         self.LANG=LANG
 
         try:
@@ -49,7 +61,7 @@ class webpage():
             sys.exit(1)
 
         # Some globals
-        self.nlpmodel={}
+        self.nlpmodel=languagemodels.nlpmodel
         self.nlpobject={}
         self.nlpfrench=""
         self.nlpenglish=""
@@ -66,16 +78,28 @@ class webpage():
         # Restrict to ASCII characters
         self.pagetext=self.pagetext.encode("ascii", errors="ignore").decode()
 
-        # We use SpaCy to do some local processing of the text
-        # Load the language token lists
-        print("Loading language files...")
-        self.nlpmodel["en"] = spacy.load("en_core_web_lg")  # English
-        self.nlpmodel["fr"] = fr_core_news_lg.load()        # French
-        self.nlpmodel["es"] = es_core_news_lg.load()        # Spanish
+        # # We use SpaCy to do some local processing of the text
+        # # Load the language token lists
+        # print("Loading language files...")
+        # self.nlpmodel["en"] = spacy.load("en_core_web_lg")  # English
+        # self.nlpmodel["fr"] = fr_core_news_lg.load()        # French
+        # self.nlpmodel["es"] = es_core_news_lg.load()        # Spanish
         
 
         # Return SpaCy language object
         self.nlpobject[LANG]=self.nlpmodel[LANG](self.pagetext)
+
+    def reduce(self, rate=1.0):  # rate of text to preserve.  .1 is 10%
+        self.pagetext=""
+        counter=0
+        for i in self.nlpobject[self.LANG].sents:
+            counter+=0.1
+            if counter <= rate:
+                self.pagetext+=i.text
+            else:
+                counter=0
+        self.nlpobject[self.LANG]=self.nlpmodel[self.LANG](self.pagetext)            
+
         
 
 class azuretranslate():
@@ -221,25 +245,30 @@ class localtranslate():
 
 class textcompare():
     def __init__(self, firstobject, secondobject):
-        # Instantiate BERT multilingual transformor
+        # Instantiate BERT multilingual transformer
         self.bert = SentenceTransformer('distiluse-base-multilingual-cased-v1')
 
+        # Compare texts using SpaCy's simularity function
         self.englishcompare=firstobject.nlpobject['en'].similarity(secondobject.nlpobject['en'])
         self.frenchcompare=firstobject.nlpobject['fr'].similarity(secondobject.nlpobject['fr'])
         self.spanishcompare=firstobject.nlpobject['es'].similarity(secondobject.nlpobject['es'])
 
-        self.bertenglish1 = self.bert.encode([firstobject.version['en']])
-        self.bertfrench1 = self.bert.encode([firstobject.version['fr']])
-        self.bertspanish1 = self.bert.encode([firstobject.version['es']])
-
-        self.bertenglish2 = self.bert.encode([secondobject.version['en']])
-        self.bertfrench2 = self.bert.encode([secondobject.version['fr']])
-        self.bertspanish2 = self.bert.encode([secondobject.version['es']])
-            
         print("SpaCy French similarity score: %6.2f" % self.frenchcompare)
         print("SpaCy English similarity score: %6.2f" % self.englishcompare)
         print("SpaCy Spanish similarity score: %6.2f" % self.spanishcompare)
 
+        # Compare with BERT transformer and SKLearn's cosine simularity.
+
+        # vectorize the lemmatized text
+        self.bertenglish1 = self.bert.encode([self.processtext(firstobject, "en")])
+        self.bertfrench1 = self.bert.encode([self.processtext(firstobject, "fr")])
+        self.bertspanish1 = self.bert.encode([self.processtext(firstobject, "es")])
+
+        self.bertenglish2 = self.bert.encode([self.processtext(secondobject, "en")])
+        self.bertfrench2 = self.bert.encode([self.processtext(secondobject, "fr")])
+        self.bertspanish2 = self.bert.encode([self.processtext(secondobject, "es")])
+
+        # compare the vectors
         bertfrench=cosine_similarity(self.bertfrench1, self.bertfrench2)[0][0]
         bertenglish=cosine_similarity(self.bertenglish1, self.bertenglish2)[0][0]
         bertspanish=cosine_similarity(self.bertspanish1, self.bertspanish2)[0][0]
@@ -247,4 +276,34 @@ class textcompare():
         print("BERT French similarity score: %6.2f" % bertfrench)
         print("BERT English similarity score:  %6.2f" % bertenglish)
         print("BERT Spanish similarity score:  %6.2f" % bertspanish)
+
+        print("Length of English text: %d" % len(firstobject.version['en']))
+        print("Length of French text: %d" % len(firstobject.version['fr']))
+        print("Length of Spanish text: %d" % len(firstobject.version['es']))
+
+        # print(firstobject.pagetext)
+        # print(secondobject.pagetext)
+
+    def processtext(self, pageobject, LANG):
+        # Process the text for BERT
+            lemma_list = []
+            for token in pageobject.nlpobject[LANG]:
+                lemma_list.append(token.lemma_)
+            
+            # Filter the stopwords
+            filtered_sentence =[] 
+            for word in lemma_list:
+                lexeme = pageobject.nlpmodel[LANG].vocab[word]
+                if lexeme.is_stop == False:
+                    filtered_sentence.append(word) 
+            
+            # Remove punctuation
+            punctuations="?:!.,;"
+            for word in filtered_sentence:
+                if word in punctuations:
+                    filtered_sentence.remove(word)
+            # Return the list as a         
+            return " ".join(filtered_sentence)
+
+
     
