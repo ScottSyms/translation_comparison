@@ -23,6 +23,7 @@ from dotenv import load_dotenv
 # from string import punctuation
 from bs4 import BeautifulSoup
 
+
 # NLP like imports
 import spacy
 import fr_core_news_lg
@@ -33,13 +34,14 @@ import torch
 
 # Bert comparisons
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sentence_transformers import SentenceTransformer
 
 # On Premises Translation 
 from transformers import MarianMTModel, MarianTokenizer
 
 class languagemodels():
+    # Load the language models once for reuse.
+
     def __init__(self):
         # We use SpaCy to do some local processing of the text
         self.nlpmodel={}
@@ -52,23 +54,28 @@ class languagemodels():
 
 class webpage():
     def __init__(self, URL, LANG, languagemodels):
+
+        # Initialize the language for the webpage
         self.LANG=LANG
 
         try:
+            # Get the webpage        
             page = requests.get(URL)
         except:
+            # If we can't get the webpage, exit
             print("Error: Could not retrieve the page")
             sys.exit(1)
 
-        # Some globals
-        self.nlpmodel=languagemodels.nlpmodel
-        self.nlpobject={}
+        # Initialize some globals
+        self.nlpmodel=languagemodels.nlpmodel # SpaCy language model
+        self.nlpobject={} # SpaCy object
         self.nlpfrench=""
         self.nlpenglish=""
         self.nlpspanish=""
-        self.version={}        
+        self.version={} # Dictionary of translation versions
 
         # extract the text from the pages
+        # Might also want to think about extracting ALT text from images.
         page = BeautifulSoup(
             page.content, features="lxml").get_text(separator=" ")
         
@@ -76,111 +83,108 @@ class webpage():
         self.pagetext=re.sub(r'\n+[ \n]*', '\n', page)
 
         # Restrict to ASCII characters
-        self.pagetext=self.pagetext.encode("ascii", errors="ignore").decode()
+        self.pagetext=self.pagetext.encode("ascii", errors="ignore").decode()     
 
-        # # We use SpaCy to do some local processing of the text
-        # # Load the language token lists
-        # print("Loading language files...")
-        # self.nlpmodel["en"] = spacy.load("en_core_web_lg")  # English
-        # self.nlpmodel["fr"] = fr_core_news_lg.load()        # French
-        # self.nlpmodel["es"] = es_core_news_lg.load()        # Spanish
-        
-
-        # Return SpaCy language object
+        # Populate object with the SpaCy object for the language at hand
         self.nlpobject[LANG]=self.nlpmodel[LANG](self.pagetext)
 
     def reduce(self, rate=1.0):  # rate of text to preserve.  .1 is 10%
+        # Use a metric to reduce the number of words for testing
         self.pagetext=""
         counter=0
-        for i in self.nlpobject[self.LANG].sents:
+
+        # iterate through the document
+        for i in self.nlpobject[self.LANG]:
+            if i.text.strip() == "":
+                continue
             counter+=0.1
             if counter <= rate:
-                self.pagetext+=i.text
+                self.pagetext+=i.text + " "
             else:
                 counter=0
         self.nlpobject[self.LANG]=self.nlpmodel[self.LANG](self.pagetext)            
 
         
 
-class azuretranslate():
-    # This code hasn't been updated to match  and won't likely work.
+# class azuretranslate():
+#     # This code hasn't been updated to match  and won't likely work.
 
-    def __init__(self, webpageobject):
-        webpageobject.french = ""
-        webpageobject.english = ""
-        webpageobject.spanish = ""
+#     def __init__(self, webpageobject):
+#         webpageobject.french = ""
+#         webpageobject.english = ""
+#         webpageobject.spanish = ""
 
-        # Set up the Microsoft Translation boiler plate
-        # Taken from Translation services example
-        # **************************************************
+#         # Set up the Microsoft Translation boiler plate
+#         # Taken from Translation services example
+#         # **************************************************
 
-        # Load the secret key for the translation service from a .env file
-        load_dotenv()
-        subscription_key = os.getenv("AZURE_TRANSLATION_KEY")
+#         # Load the secret key for the translation service from a .env file
+#         load_dotenv()
+#         subscription_key = os.getenv("AZURE_TRANSLATION_KEY")
 
-        # End point for the translation service
-        endpoint = "https://api.cognitive.microsofttranslator.com/"
+#         # End point for the translation service
+#         endpoint = "https://api.cognitive.microsofttranslator.com/"
 
-        # Add your location, also known as region. The default is global.
-        # This is required if using a Cognitive Services resource.
-        self.location = "canadacentral"
+#         # Add your location, also known as region. The default is global.
+#         # This is required if using a Cognitive Services resource.
+#         self.location = "canadacentral"
 
-        # Construct the endpoint URL and POST headers
-        path = '/translate'
-        self.constructed_url = endpoint + path
+#         # Construct the endpoint URL and POST headers
+#         path = '/translate'
+#         self.constructed_url = endpoint + path
 
-        self.headers = {
-            'Ocp-Apim-Subscription-Key': subscription_key,
-            'Ocp-Apim-Subscription-Region': self.location,
-            'Content-type': 'application/json',
-            'X-ClientTraceId': str(uuid.uuid4())
-        }
-        # Initialize empty dictionaries for on prem tokenizer and model
-        self.model={}
-        self.tokenizer={}
+#         self.headers = {
+#             'Ocp-Apim-Subscription-Key': subscription_key,
+#             'Ocp-Apim-Subscription-Region': self.location,
+#             'Content-type': 'application/json',
+#             'X-ClientTraceId': str(uuid.uuid4())
+#         }
+#         # Initialize empty dictionaries for on prem tokenizer and model
+#         self.model={}
+#         self.tokenizer={}
 
 
-        # Instantiate models and tokenizers
-        if webpageobject.LANG == "en":
-            webpageobject.english=webpageobject.pagetext
-            webpageobject.nlpenglish=webpageobject.nlpes(webpageobject.pagetext)
+#         # Instantiate models and tokenizers
+#         if webpageobject.LANG == "en":
+#             webpageobject.english=webpageobject.pagetext
+#             webpageobject.nlpenglish=webpageobject.nlpes(webpageobject.pagetext)
 
-            # English to French
-            print("Translating English to French")
-            params = { 'api-version': '3.0', 'from': 'en', 'to': ["fr"] }
-            for i in webpageobject.pagetext.split("."):
-                body = [{'text': i }]
-                request = requests.post(self.constructed_url, params=params, headers=self.headers, json=body)
-                webpageobject.french=webpageobject.french + request.json()[0]["translations"][0]["text"] + ".\n"
-            webpageobject.nlpfrench=webpageobject.nlpfr(webpageobject.french)
+#             # English to French
+#             print("Translating English to French")
+#             params = { 'api-version': '3.0', 'from': 'en', 'to': ["fr"] }
+#             for i in webpageobject.pagetext.split("."):
+#                 body = [{'text': i }]
+#                 request = requests.post(self.constructed_url, params=params, headers=self.headers, json=body)
+#                 webpageobject.french=webpageobject.french + request.json()[0]["translations"][0]["text"] + ".\n"
+#             webpageobject.nlpfrench=webpageobject.nlpfr(webpageobject.french)
 
-            # English to Spanish
-            print("Translating English to Spanish")
-            params = { 'api-version': '3.0', 'from': 'en', 'to': ["es"] }
-            for i in webpageobject.pagetext.split("."):
-                body = [{'text': i }]
-                request = requests.post(self.constructed_url, params=params, headers=self.headers, json=body)
-                webpageobject.spanish=webpageobject.spanish + request.json()[0]["translations"][0]["text"] + ".\n"
-            webpageobject.nlpspanish=webpageobject.nlpes(webpageobject.spanish)
+#             # English to Spanish
+#             print("Translating English to Spanish")
+#             params = { 'api-version': '3.0', 'from': 'en', 'to': ["es"] }
+#             for i in webpageobject.pagetext.split("."):
+#                 body = [{'text': i }]
+#                 request = requests.post(self.constructed_url, params=params, headers=self.headers, json=body)
+#                 webpageobject.spanish=webpageobject.spanish + request.json()[0]["translations"][0]["text"] + ".\n"
+#             webpageobject.nlpspanish=webpageobject.nlpes(webpageobject.spanish)
 
-        else:
-            # French to English
-            print("Translating French to English")
-            params = { 'api-version': '3.0', 'from': 'fr', 'to': ["en"] }
-            for i in webpageobject.pagetext.split("."):
-                body = [{'text': i }]
-                request = requests.post(self.constructed_url, params=params, headers=self.headers, json=body)
-                webpageobject.english=webpageobject.english + request.json()[0]["translations"][0]["text"] + ".\n"
-            webpageobject.nlpenglish=webpageobject.nlpen(webpageobject.english)
+#         else:
+#             # French to English
+#             print("Translating French to English")
+#             params = { 'api-version': '3.0', 'from': 'fr', 'to': ["en"] }
+#             for i in webpageobject.pagetext.split("."):
+#                 body = [{'text': i }]
+#                 request = requests.post(self.constructed_url, params=params, headers=self.headers, json=body)
+#                 webpageobject.english=webpageobject.english + request.json()[0]["translations"][0]["text"] + ".\n"
+#             webpageobject.nlpenglish=webpageobject.nlpen(webpageobject.english)
 
-            #  French to Spanish tokenizer and model
-            print("Translating French to Spanish")
-            params = { 'api-version': '3.0', 'from': 'fr', 'to': ["en"] }
-            for i in webpageobject.pagetext.split("."):
-                body = [{'text': i }]
-                request = requests.post(self.constructed_url, params=params, headers=self.headers, json=body)
-                webpageobject.spanish=webpageobject.spanish + request.json()[0]["translations"][0]["text"] + ".\n"
-            webpageobject.nlpspanish=webpageobject.nlpes(webpageobject.spanish)
+#             #  French to Spanish tokenizer and model
+#             print("Translating French to Spanish")
+#             params = { 'api-version': '3.0', 'from': 'fr', 'to': ["en"] }
+#             for i in webpageobject.pagetext.split("."):
+#                 body = [{'text': i }]
+#                 request = requests.post(self.constructed_url, params=params, headers=self.headers, json=body)
+#                 webpageobject.spanish=webpageobject.spanish + request.json()[0]["translations"][0]["text"] + ".\n"
+#             webpageobject.nlpspanish=webpageobject.nlpes(webpageobject.spanish)
 
 
 class localtranslate():
@@ -258,7 +262,6 @@ class textcompare():
         print("SpaCy Spanish similarity score: %6.2f" % self.spanishcompare)
 
         # Compare with BERT transformer and SKLearn's cosine simularity.
-
         # vectorize the lemmatized text
         self.bertenglish1 = self.bert.encode([self.processtext(firstobject, "en")])
         self.bertfrench1 = self.bert.encode([self.processtext(firstobject, "fr")])
@@ -276,6 +279,8 @@ class textcompare():
         print("BERT French similarity score: %6.2f" % bertfrench)
         print("BERT English similarity score:  %6.2f" % bertenglish)
         print("BERT Spanish similarity score:  %6.2f" % bertspanish)
+        print("BERT aggregate similarity score:  %6.2f" % (bertspanish + bertfrench + bertenglish)/3)
+        
 
         print("Length of English text: %d" % len(firstobject.version['en']))
         print("Length of French text: %d" % len(firstobject.version['fr']))
@@ -285,7 +290,7 @@ class textcompare():
         # print(secondobject.pagetext)
 
     def processtext(self, pageobject, LANG):
-        # Process the text for BERT
+        # Process the text for BERT by "lemmatizing" the text and removing stopwords
             lemma_list = []
             for token in pageobject.nlpobject[LANG]:
                 lemma_list.append(token.lemma_)
@@ -302,7 +307,8 @@ class textcompare():
             for word in filtered_sentence:
                 if word in punctuations:
                     filtered_sentence.remove(word)
-            # Return the list as a         
+
+            # Return the abbreviated text        
             return " ".join(filtered_sentence)
 
 

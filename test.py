@@ -4,7 +4,7 @@ Run the application against some web pages for testing.
 
 import translationcompare
 
-def testtranslation(description, englishpage, frenchpage, languagemodels):
+def testtranslation(description, englishpage, frenchpage, languagemodels, datarate=1.0):
     # Step through collection, translation and comparison steps.
 
     print("\n\n\n" + description)
@@ -14,7 +14,7 @@ def testtranslation(description, englishpage, frenchpage, languagemodels):
     french=translationcompare.webpage(frenchpage, "fr", languagemodels)
 
     # Remove a percentage of the sentences for one page
-    french.reduce(.3)
+    french.reduce(datarate)
 
      # Translate with Local Translator
     print("Translate with Local Services")
