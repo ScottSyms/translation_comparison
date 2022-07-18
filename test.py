@@ -29,35 +29,29 @@ def testtranslation(description, englishpage, frenchpage, languagemodels, datara
 # Initialize language model_inputs
 languagemodels=translationcompare.languagemodels()
 
-# # Test 
-testtranslation("Full test data", "https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/ic98-1/tax-collections-policies.html", "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications/ic98-1/politiques-recouvrement-impot.html", languagemodels)
-
-# # Test 
-# testtranslation("Three quarters", "https://github.com/ScottSyms/translation_comparison/tests/3fourths-en.txt", "https://github.com/ScottSyms/translation_comparison/tests/full-fr.txt")
-
-# # Test 
-# testtranslation("One Half", "https://github.com/ScottSyms/translation_comparison/tests/1half-en.txt", "https://github.com/ScottSyms/translation_comparison/tests/full-fr.txt")
-
 # Test 
-# testtranslation("One quarter", "https://github.com/ScottSyms/translation_comparison/tests/1fourth-en.txt", "https://github.com/ScottSyms/translation_comparison/tests/full-fr.txt")
+testtranslation("Full test data", "https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/ic98-1/tax-collections-policies.html", "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications/ic98-1/politiques-recouvrement-impot.html", languagemodels, 0.5)
+
+# # Test 
+# testtranslation("50% test data", "https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/ic98-1/tax-collections-policies.html", "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications/ic98-1/politiques-recouvrement-impot.html", languagemodels)
+
+# Test
+# testtranslation("Hockey Canada landing page", "https://www.hockeycanada.ca/en-ca/home", "https://www.hockeycanada.ca/fr-ca/home", languagemodels)
 
 # # Test
-# testtranslation("Hockey Canada landing page", "https://www.hockeycanada.ca/en-ca/home", "https://www.hockeycanada.ca/fr-ca/home")
-
-# # Test
-# testtranslation("Contrasting content", "https://www.hockeycanada.ca/en-ca/home", "https://fencing.ca/fr/")
+# testtranslation("Contrasting content", "https://www.hockeycanada.ca/en-ca/home", "https://fencing.ca/fr/", languagemodels)
 
 # # Test
 # testtranslation("Contrasting Content 2", "http://slashdot.org", "https://fencing.ca/fr/", languagemodels)
 
 #  # Test
-# testtranslation("Fencing Canada Federation", "https://fencing.ca/", "https://fencing.ca/fr/")
+# testtranslation("Fencing Canada Federation", "https://fencing.ca/", "https://fencing.ca/fr/", languagemodels)
 
 # # Test
-# testtranslation("Swimming Canada", "https://www.swimming.ca/en/", "https://www.swimming.ca/fr/")
+# testtranslation("Swimming Canada", "https://www.swimming.ca/en/", "https://www.swimming.ca/fr/", languagemodels)
 
 # # Test
-# testtranslation("Volleyball Canada", "https://volleyball.ca/en/news/canada-edged-by-germany-in-vnl", "https://volleyball.ca/fr/actualites/le-canada-subit-une-defaite-serree-contre-l-allemagne-en-ligue-des-nations")
+# testtranslation("Volleyball Canada", "https://volleyball.ca/en/news/canada-edged-by-germany-in-vnl", "https://volleyball.ca/fr/actualites/le-canada-subit-une-defaite-serree-contre-l-allemagne-en-ligue-des-nations", languagemodels)
 
 # # Test
-# testtranslation("Swimming Canada", "https://www.swimming.ca/en/", "https://www.swimming.ca/fr/")
+# testtranslation("Swimming Canada", "https://www.swimming.ca/en/", "https://www.swimming.ca/fr/", languagemodels)

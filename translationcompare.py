@@ -69,9 +69,9 @@ class webpage():
         # Initialize some globals
         self.nlpmodel=languagemodels.nlpmodel # SpaCy language model
         self.nlpobject={} # SpaCy object
-        self.nlpfrench=""
-        self.nlpenglish=""
-        self.nlpspanish=""
+        # self.nlpfrench=""
+        # self.nlpenglish=""
+        # self.nlpspanish=""
         self.version={} # Dictionary of translation versions
 
         # extract the text from the pages
@@ -100,7 +100,8 @@ class webpage():
             counter+=0.1
             if counter <= rate:
                 self.pagetext+=i.text + " "
-            else:
+        # If counter exceeds 1, reset
+        if counter > 1.0:
                 counter=0
         self.nlpobject[self.LANG]=self.nlpmodel[self.LANG](self.pagetext)            
 
@@ -279,7 +280,7 @@ class textcompare():
         print("BERT French similarity score: %6.2f" % bertfrench)
         print("BERT English similarity score:  %6.2f" % bertenglish)
         print("BERT Spanish similarity score:  %6.2f" % bertspanish)
-        print("BERT aggregate similarity score:  %6.2f" % (bertspanish + bertfrench + bertenglish)/3)
+        print("BERT aggregate similarity score:  %6.2f" % ((bertspanish + bertfrench + bertenglish)/3))
         
 
         print("Length of English text: %d" % len(firstobject.version['en']))
