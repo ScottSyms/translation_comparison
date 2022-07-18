@@ -249,6 +249,7 @@ class localtranslate():
             
 
 class textcompare():
+    # Definitely more room for experimentation with this comparison.
     def __init__(self, firstobject, secondobject):
         # Instantiate BERT multilingual transformer
         self.bert = SentenceTransformer('distiluse-base-multilingual-cased-v1')

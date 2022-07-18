@@ -30,13 +30,13 @@ def testtranslation(description, englishpage, frenchpage, languagemodels, datara
 languagemodels=translationcompare.languagemodels()
 
 # Test 
-testtranslation("Full test data", "https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/ic98-1/tax-collections-policies.html", "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications/ic98-1/politiques-recouvrement-impot.html", languagemodels, 0.5)
+testtranslation("Full test data", "https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/ic98-1/tax-collections-policies.html", "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications/ic98-1/politiques-recouvrement-impot.html", languagemodels, 1.0)
 
 # # Test 
 # testtranslation("50% test data", "https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/ic98-1/tax-collections-policies.html", "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications/ic98-1/politiques-recouvrement-impot.html", languagemodels)
 
 # Test
-# testtranslation("Hockey Canada landing page", "https://www.hockeycanada.ca/en-ca/home", "https://www.hockeycanada.ca/fr-ca/home", languagemodels)
+testtranslation("Hockey Canada landing page", "https://www.hockeycanada.ca/en-ca/home", "https://www.hockeycanada.ca/fr-ca/home", languagemodels)
 
 # # Test
 # testtranslation("Contrasting content", "https://www.hockeycanada.ca/en-ca/home", "https://fencing.ca/fr/", languagemodels)
